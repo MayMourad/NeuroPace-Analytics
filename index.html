@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<!--
+==========================================================================
+  NEUROPACE ANALYTICS  —  Cognitive Load & Athlete Performance Intelligence
+  UniHawk × EU Business School  |  Level Up and Let's Play Competition
+==========================================================================
+
+  FILE STRUCTURE (COMBINED DELIVERABLE)
+  ──────────────────────────────────────
+  This single HTML file contains the complete frontend prototype.
+  The FastAPI backend (app.py) is embedded at the bottom of this file
+  inside <script type="text/python-backend"> for GitHub reference.
+
+  TO RUN BACKEND:
+    1. Extract the app.py block below into app.py
+    2. pip install fastapi uvicorn numpy
+    3. uvicorn app:app --reload --port 8000
+
+  Frontend runs standalone in any browser — no server required.
+==========================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroPace Analytics — Cognitive Performance Intelligence</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS & RESET
+═══════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+:root {
+  /* Core palette */
+  --bg-void:        #050608;
+  --bg-deep:        #080b10;
+  --bg-panel:       #0d1117;
+  --bg-surface:     #111822;
+  --bg-elevated:    #172030;
+  --bg-hover:       #1c2a3d;
+
+  /* Borders */
+  --border-subtle:  rgba(255,255,255,0.045);
+  --border-mid:     rgba(255,255,255,0.09);
+  --border-strong:  rgba(255,255,255,0.14);
+
+  /* CRI State Colors */
+  --cri-green:      #00e5a0;
+  --cri-green-dim:  rgba(0,229,160,0.18);
+  --cri-green-glow: rgba(0,229,160,0.35);
+  --cri-amber:      #f5a623;
+  --cri-amber-dim:  rgba(245,166,35,0.18);
+  --cri-amber-glow: rgba(245,166,35,0.35);
+  --cri-red:        #ff3d57;
+  --cri-red-dim:    rgba(255,61,87,0.18);
+  --cri-red-glow:   rgba(255,61,87,0.35);
+
+  /* Accent */
+  --accent-cyan:    #00c8ff;
+  --accent-violet:  #7c5cfc;
+  --accent-pulse:   #00e5a0;
+
+  /* Typography */
+  --text-primary:   #f0f4ff;
+  --text-secondary: #8a9bb8;
+  --text-muted:     #4a5870;
+  --text-label:     #5c7090;
+
+  /* Font families */
+  --font-display:   'Syne', sans-serif;
+  --font-mono:      'Space Mono', monospace;
+  --font-body:      'DM Sans', sans-serif;
+
+  /* Geometry */
+  --radius-sm:      4px;
+  --radius-md:      8px;
+  --radius-lg:      14px;
+  --radius-xl:      20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════════════════════════════ */
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════════ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 58px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.brand-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-cyan);
+  background: rgba(0,200,255,0.08);
+  border: 1px solid rgba(0,200,255,0.2);
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cri-green);
+  box-shadow: 0 0 8px var(--cri-green-glow);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--cri-green-glow); }
+  50%       { opacity: 0.6; box-shadow: 0 0 3px var(--cri-green-glow); }
+}
+
+.live-clock {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+═══════════════════════════════════════════════════════════════ */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  min-height: calc(100vh - 58px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION HEADERS
+═══════════════════════════════════════════════════════════════ */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.section-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SQUAD COMMAND BRIDGE (left column top)
+═══════════════════════════════════════════════════════════════ */
+.squad-zone {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+}
+
+.squad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+/* ── Athlete Tile ── */
+.athlete-tile {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.athlete-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.athlete-tile:hover {
+  border-color: var(--border-mid);
+  transform: translateY(-1px);
+}
+
+.athlete-tile:hover::before { opacity: 1; }
+
+.athlete-tile.selected {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 1px rgba(0,200,255,0.2), inset 0 0 20px rgba(0,200,255,0.04);
+}
+
+/* State-dependent glow */
+.athlete-tile[data-state="green"] { --tile-color: var(--cri-green); --tile-glow: var(--cri-green-glow); }
+.athlete-tile[data-state="amber"] { --tile-color: var(--cri-amber); --tile-glow: var(--cri-amber-glow); }
+.athlete-tile[data-state="red"]   { --tile-color: var(--cri-red);   --tile-glow: var(--cri-red-glow); }
+
+.athlete-tile[data-state="green"]:hover { box-shadow: 0 4px 20px rgba(0,229,160,0.15); }
+.athlete-tile[data-state="amber"]:hover { box-shadow: 0 4px 20px rgba(245,166,35,0.15); }
+.athlete-tile[data-state="red"]:hover   { box-shadow: 0 4px 20px rgba(255,61,87,0.15); }
+
+.tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.athlete-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tile-color);
+  border: 1.5px solid var(--tile-color);
+  text-transform: uppercase;
+}
+
+.tile-position {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* CRI Gauge — SVG arc */
+.cri-gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cri-gauge-svg {
+  width: 72px;
+  height: 42px;
+  overflow: visible;
+}
+
+.gauge-track {
+  fill: none;
+  stroke: var(--bg-elevated);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke: var(--tile-color);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 4px var(--tile-glow));
+}
+
+.cri-value {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--tile-color);
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.cri-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.athlete-name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.tile-metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.tile-metric {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-deep);
+  border-radius: var(--radius-sm);
+  padding: 5px 3px;
+}
+
+.tile-metric-val {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+}
+
+.tile-metric-key {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  display: block;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ATHLETE INTELLIGENCE PANEL (left column bottom)
+═══════════════════════════════════════════════════════════════ */
+.intel-panel {
+  grid-column: 1;
+  grid-row: 2;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tabs */
+.intel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 20px;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.intel-tab {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 14px 16px 12px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  transition: all 0.18s ease;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.intel-tab:hover { color: var(--text-secondary); }
+.intel-tab.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+.intel-body {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.tab-pane { display: none; padding: 20px 22px; }
+.tab-pane.active { display: block; }
+
+/* ── Tab 1: Readiness Timeline ── */
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.timeline-athlete-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.timeline-pos {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.chart-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  display: block;
+}
+
+.kpi-delta {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  display: block;
+  margin-top: 2px;
+}
+.kpi-delta.up   { color: var(--cri-green); }
+.kpi-delta.down { color: var(--cri-red); }
+.kpi-delta.flat { color: var(--text-muted); }
+
+.kpi-key {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-top: 4px;
+}
+
+/* ── Tab 2: Session Planner ── */
+.planner-form { display: flex; flex-direction: column; gap: 14px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.form-input, .form-select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  transition: border-color 0.18s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(0,200,255,0.1);
+}
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.range-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.range-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.range-input {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0,200,255,0.5);
+  transition: transform 0.15s ease;
+}
+
+.range-input::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.range-val {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  min-width: 28px;
+  text-align: right;
+}
+
+.risk-display {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-top: 4px;
+}
+
+.risk-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 12px;
+}
+
+.risk-score-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.risk-score-val {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.risk-band {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.risk-band-low    { color: var(--cri-green); background: var(--cri-green-dim); }
+.risk-band-medium { color: var(--cri-amber); background: var(--cri-amber-dim); }
+.risk-band-high   { color: var(--cri-red);   background: var(--cri-red-dim); }
+
+.risk-bar-track {
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s ease;
+}
+
+.risk-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.risk-factor {
+  background: var(--bg-deep);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  text-align: center;
+}
+
+.risk-factor-val {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  display: block;
+  font-weight: 700;
+}
+
+.risk-factor-key {
+  font-size: 0.57rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── Tab 3: Cognitive Signature ── */
+.cog-sig-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.radar-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.radar-canvas {
+  width: 240px;
+  height: 240px;
+  display: block;
+}
+
+.cog-dims {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cog-dim {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  transition: border-color 0.18s;
+}
+
+.cog-dim:hover { border-color: var(--border-mid); }
+
+.cog-dim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cog-dim-name {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.cog-dim-score {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.cog-dim-bar {
+  height: 3px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.cog-dim-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT SIDEBAR — Reaction-Time Mini-Game + Live Feed
+═══════════════════════════════════════════════════════════════ */
+.right-sidebar {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Mini-Game Section ── */
+.game-section {
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.game-arena {
+  margin: 16px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+
+.game-arena-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.game-idle-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.game-idle-icon {
+  font-size: 28px;
+  opacity: 0.4;
+}
+
+.game-idle-text {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.btn-start-game {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bg-deep);
+  background: var(--accent-cyan);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 9px 22px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 0 16px rgba(0,200,255,0.3);
+}
+
+.btn-start-game:hover {
+  background: #33d3ff;
+  box-shadow: 0 0 24px rgba(0,200,255,0.45);
+  transform: translateY(-1px);
+}
+
+.btn-start-game:disabled {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Countdown overlay */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5,6,8,0.85);
+  z-index: 10;
+  display: none;
+}
+
+.countdown-num {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  animation: pop 0.5s ease;
+}
+
+@keyframes pop {
+  0%   { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+/* Stimulus target */
+.stimulus-target {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.25), transparent 70%);
+  border: 2px solid var(--accent-cyan);
+  box-shadow: 0 0 16px rgba(0,200,255,0.5), 0 0 4px rgba(0,200,255,0.3);
+  cursor: crosshair;
+  transform: translate(-50%, -50%) scale(0);
+  animation: target-spawn 0.2s cubic-bezier(0.2,1.4,0.6,1) forwards;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stimulus-target::after {
+  content: '+';
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+@keyframes target-spawn {
+  to { transform: translate(-50%, -50%) scale(1); }
+}
+
+.stimulus-target.hit {
+  animation: target-hit 0.25s ease forwards;
+}
+
+@keyframes target-hit {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+
+/* Game HUD */
+.game-hud {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  z-index: 8;
+}
+
+.hud-timer {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.hud-timer.urgent { color: var(--cri-red); animation: blink 0.5s ease infinite; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.hud-hits {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Game controls row */
+.game-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 14px;
+}
+
+.game-stat {
+  text-align: center;
+}
+
+.game-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: block;
+}
+
+.game-stat-key {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── Reaction Results ── */
+.reaction-results {
+  padding: 14px 16px;
+  display: none;
+}
+
+.results-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.result-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.result-card-val {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  display: block;
+}
+
+.result-card-key {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-top: 3px;
+}
+
+.cri-contribution {
+  background: linear-gradient(135deg, rgba(124,92,252,0.1), rgba(0,200,255,0.1));
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cri-contribution-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cri-contribution-val {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+/* Latency histogram bars */
+.latency-histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 40px;
+  margin-top: 10px;
+  padding: 0 2px;
+}
+
+.histo-bar {
+  flex: 1;
+  background: rgba(0,200,255,0.25);
+  border-radius: 2px 2px 0 0;
+  transition: height 0.6s cubic-bezier(0.4,0,0.2,1);
+  min-height: 2px;
+  cursor: pointer;
+}
+
+.histo-bar:hover { background: rgba(0,200,255,0.5); }
+
+/* ── Live Event Feed ── */
+.live-feed {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  animation: feed-slide 0.3s ease;
+  flex-shrink: 0;
+}
+
+@keyframes feed-slide {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.feed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.feed-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.feed-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.feed-time {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SYSTEM STATUS BAR
+═══════════════════════════════════════════════════════════════ */
+.status-bar {
+  grid-column: 1 / 3;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+}
+
+.status-items {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-indicator.online { background: var(--cri-green); box-shadow: 0 0 6px var(--cri-green-glow); }
+.status-indicator.warn   { background: var(--cri-amber); box-shadow: 0 0 6px var(--cri-amber-glow); }
+
+.clie-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--accent-violet);
+  border: 1px solid rgba(124,92,252,0.3);
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(124,92,252,0.08);
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════════════════════════ */
+.hidden { display: none !important; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ═══ TOPBAR ═══ -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">⚡</div>
+      <span class="brand-name">NeuroPace Analytics</span>
+      <span class="brand-tag">CLIE v2.1</span>
+    </div>
+    <div class="topbar-status">
+      <div class="status-chip">
+        <span class="status-dot"></span>
+        LIVE · 12 ATHLETES
+      </div>
+      <div class="live-clock" id="liveClock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN GRID ═══ -->
+  <div class="main-content">
+
+    <!-- ═══ SQUAD COMMAND BRIDGE ═══ -->
+    <section class="squad-zone">
+      <div class="section-header">
+        <span class="section-title">Squad Command Bridge</span>
+        <span class="section-badge" id="squadBadge">12 ATHLETES · 8-SEC DRIFT</span>
+      </div>
+      <div class="squad-grid" id="squadGrid">
+        <!-- Tiles injected by JS -->
+      </div>
+    </section>
+
+    <!-- ═══ RIGHT SIDEBAR ═══ -->
+    <aside class="right-sidebar">
+      <div class="section-header">
+        <span class="section-title">Reaction-Time Intake</span>
+        <span class="section-badge">60 SEC · RT-CRI</span>
+      </div>
+
+      <!-- Game Arena -->
+      <div class="game-section">
+        <div class="game-arena" id="gameArena">
+          <div class="game-arena-grid"></div>
+          <div class="countdown-overlay" id="countdownOverlay">
+            <span class="countdown-num" id="countdownNum">3</span>
+          </div>
+          <div class="game-hud hidden" id="gameHud">
+            <span class="hud-timer" id="hudTimer">60</span>
+            <span class="hud-hits" id="hudHits">0 HIT</span>
+          </div>
+          <div class="game-idle-state" id="gameIdleState">
+            <div class="game-idle-icon">🎯</div>
+            <div class="game-idle-text">COGNITIVE REACTION INTAKE<br>CLICK TARGETS AS THEY APPEAR</div>
+          </div>
+        </div>
+        <div class="game-controls">
+          <div class="game-stat">
+            <span class="game-stat-val" id="statHits">—</span>
+            <span class="game-stat-key">HITS</span>
+          </div>
+          <button class="btn-start-game" id="btnStartGame" onclick="startReactionGame()">START TEST</button>
+          <div class="game-stat">
+            <span class="game-stat-val" id="statAvgRT">—</span>
+            <span class="game-stat-key">AVG RT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reaction Results (shown after game) -->
+      <div class="reaction-results" id="reactionResults">
+        <div class="results-title">Session Results — Reaction Profile</div>
+        <div class="results-grid">
+          <div class="result-card">
+            <span class="result-card-val" id="resMeanRT">—</span>
+            <span class="result-card-key">MEAN RT</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val" id="resMinRT">—</span>
+            <span class="result-card-key">BEST RT</span>
+          </div>
+          <div class="result-card">
+            <span class="result-card-val" id="resAccuracy">—</span>
+            <span class="result-card-key">ACCURACY</span>
+          </div>
+        </div>
+        <div class="cri-contribution">
+          <span class="cri-contribution-label">CRI Contribution (Decision Latency)</span>
+          <span class="cri-contribution-val" id="resCRIContrib">—</span>
+        </div>
+        <div class="latency-histogram" id="latencyHistogram"></div>
+      </div>
+
+      <!-- Live Feed -->
+      <div class="live-feed">
+        <div class="section-header">
+          <span class="section-title">Event Feed</span>
+          <span class="section-badge" id="feedBadge">LIVE</span>
+        </div>
+        <div class="feed-items" id="feedItems">
+          <!-- Feed events injected by JS -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ ATHLETE INTELLIGENCE PANEL ═══ -->
+    <section class="intel-panel">
+      <div class="section-header">
+        <span class="section-title">Athlete Intelligence Panel</span>
+        <span class="section-badge" id="selectedAthleteBadge">SELECT ATHLETE</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="intel-tabs">
+        <button class="intel-tab active" data-tab="timeline" onclick="switchTab('timeline', this)">
+          Readiness Timeline
+        </button>
+        <button class="intel-tab" data-tab="planner" onclick="switchTab('planner', this)">
+          Session Planner
+        </button>
+        <button class="intel-tab" data-tab="signature" onclick="switchTab('signature', this)">
+          Cognitive Signature
+        </button>
+      </div>
+
+      <div class="intel-body">
+
+        <!-- ── Tab 1: Readiness Timeline ── -->
+        <div class="tab-pane active" id="tab-timeline">
+          <div class="timeline-header">
+            <div class="timeline-athlete-info">
+              <span class="timeline-name" id="tlAthleteName">Select an athlete above</span>
+              <span class="timeline-pos" id="tlAthletePos">—</span>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-cyan);"></div>
+                CRI
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-violet);"></div>
+                HRV
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas class="chart-canvas" id="timelineCanvas" width="700" height="160"></canvas>
+          </div>
+
+          <div class="kpi-strip">
+            <div class="kpi-card">
+              <span class="kpi-value" id="kpiCRI">—</span>
+              <span class="kpi-delta flat" id="kpiCRIDelta">—</span>
+              <span class="kpi-key">CRI</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-value" id="kpiHRV">—</span>
+              <span class="kpi-delta flat" id="kpiHRVDelta">—</span>
+              <span class="kpi-key">HRV ms</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-value" id="kpiRT">—</span>
+              <span class="kpi-delta flat" id="kpiRTDelta">—</span>
+              <span class="kpi-key">RT ms</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-value" id="kpiSRS">—</span>
+              <span class="kpi-delta flat" id="kpiSRSDelta">—</span>
+              <span class="kpi-key">SRS</span>
+            </div>
+          </div>
+
+          <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);text-align:right;letter-spacing:0.06em;">
+            LAST 14 DAYS · AUTO-REFRESH 8s · GAUSSIAN SIMULATED
+          </div>
+        </div>
+
+        <!-- ── Tab 2: Session Planner ── -->
+        <div class="tab-pane" id="tab-planner">
+          <div class="planner-form">
+
+            <div class="form-group">
+              <label class="form-label">Session Type</label>
+              <select class="form-select" id="sessionType" onchange="computeRisk()">
+                <option value="recovery">Recovery / Low Intensity</option>
+                <option value="technical">Technical Drills</option>
+                <option value="tactical" selected>Tactical Simulation</option>
+                <option value="high_intensity">High Intensity Training</option>
+                <option value="match">Match Day Protocol</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="range-wrap">
+                <div class="range-header">
+                  <label class="form-label">Intensity</label>
+                  <span class="range-val" id="intensityVal">6</span>
+                </div>
+                <input type="range" class="range-input" id="intensity"
+                  min="1" max="10" value="6" oninput="syncRange('intensity','intensityVal');computeRisk()">
+              </div>
+              <div class="range-wrap">
+                <div class="range-header">
+                  <label class="form-label">Duration (min)</label>
+                  <span class="range-val" id="durationVal">75</span>
+                </div>
+                <input type="range" class="range-input" id="duration"
+                  min="15" max="180" value="75" oninput="syncRange('duration','durationVal');computeRisk()">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="range-wrap">
+                <div class="range-header">
+                  <label class="form-label">Tactical Complexity</label>
+                  <span class="range-val" id="complexityVal">5</span>
+                </div>
+                <input type="range" class="range-input" id="complexity"
+                  min="1" max="10" value="5" oninput="syncRange('complexity','complexityVal');computeRisk()">
+              </div>
+              <div class="range-wrap">
+                <div class="range-header">
+                  <label class="form-label">Recovery Window (h)</label>
+                  <span class="range-val" id="recoveryVal">18</span>
+                </div>
+                <input type="range" class="range-input" id="recovery"
+                  min="4" max="72" value="18" oninput="syncRange('recovery','recoveryVal');computeRisk()">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Athlete CRI Override (leave 0 for auto)</label>
+              <input type="number" class="form-input" id="criOverride"
+                min="0" max="100" value="0" placeholder="0 = use selected athlete's CRI"
+                oninput="computeRisk()">
+            </div>
+
+            <div class="risk-display">
+              <div class="risk-title">Session Risk Score (SRS) — CLIE Computation</div>
+              <div class="risk-score-row">
+                <span class="risk-score-val" id="riskScoreVal" style="color:var(--cri-amber)">42</span>
+                <span class="risk-band risk-band-medium" id="riskBandLabel">MODERATE</span>
+              </div>
+              <div class="risk-bar-track">
+                <div class="risk-bar-fill" id="riskBarFill" style="width:42%;background:var(--cri-amber)"></div>
+              </div>
+              <div class="risk-breakdown">
+                <div class="risk-factor">
+                  <span class="risk-factor-val" id="rfIntensity">—</span>
+                  <span class="risk-factor-key">Intensity</span>
+                </div>
+                <div class="risk-factor">
+                  <span class="risk-factor-val" id="rfCognitive">—</span>
+                  <span class="risk-factor-key">Cognitive</span>
+                </div>
+                <div class="risk-factor">
+                  <span class="risk-factor-val" id="rfRecovery">—</span>
+                  <span class="risk-factor-key">Recovery</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tab 3: Cognitive Signature ── -->
+        <div class="tab-pane" id="tab-signature">
+          <div class="cog-sig-header">
+            <div>
+              <div class="timeline-name" id="sigAthleteName">Select an athlete</div>
+              <div class="timeline-pos" id="sigAthletePos">—</div>
+            </div>
+            <div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);letter-spacing:0.06em;">6 SUB-DIMENSIONS</div>
+          </div>
+          <div class="radar-wrap">
+            <canvas class="radar-canvas" id="radarCanvas" width="240" height="240"></canvas>
+          </div>
+          <div class="cog-dims" id="cogDimsGrid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+      </div><!-- intel-body -->
+    </section><!-- intel-panel -->
+
+  </div><!-- main-content -->
+
+  <!-- ═══ STATUS BAR ═══ -->
+  <footer class="status-bar">
+    <div class="status-items">
+      <div class="status-item">
+        <span class="status-indicator online"></span>
+        CLIE ENGINE ACTIVE
+      </div>
+      <div class="status-item">
+        <span class="status-indicator online"></span>
+        HRV STREAM LIVE
+      </div>
+      <div class="status-item">
+        <span class="status-indicator warn"></span>
+        cvxEDA PROCESSING
+      </div>
+      <div class="status-item">
+        <span class="status-indicator online"></span>
+        Z-SCORE PIPELINE OK
+      </div>
+    </div>
+    <span class="clie-badge">CLIE · RMSSD · DUAL-TASK INTERFERENCE · SESSION RISK MATRIX</span>
+  </footer>
+
+</div><!-- app-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT — COMPLETE IMPLEMENTATION
+═══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   SECTION 1 — ATHLETE DATA MODEL
+   Box-Muller Gaussian simulation
+═══════════════════════════════════════════════ */
+
+function gaussianRandom(mean, std) {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
+
+function generateAthleteHistory(baseCRI, baseHRV, baseRT) {
+  const days = 14;
+  const cri = [], hrv = [], rt = [], srs = [];
+  let cCRI = baseCRI, cHRV = baseHRV, cRT = baseRT;
+  for (let i = 0; i < days; i++) {
+    cCRI = clamp(gaussianRandom(cCRI, 5), 20, 100);
+    cHRV = clamp(gaussianRandom(cHRV, 6), 20, 120);
+    cRT  = clamp(gaussianRandom(cRT, 18), 180, 550);
+    const srScore = clamp(100 - cCRI * 0.6 - (cHRV - 50) * 0.2 + (cRT - 300) * 0.05, 0, 100);
+    cri.push(Math.round(cCRI));
+    hrv.push(Math.round(cHRV));
+    rt.push(Math.round(cRT));
+    srs.push(Math.round(clamp(srScore, 0, 100)));
+  }
+  return { cri, hrv, rt, srs };
+}
+
+function generateCogSignature(baseCRI) {
+  const dims = [
+    'Sustained Attention', 'Inhibitory Control',
+    'Working Memory', 'Processing Speed',
+    'Decision Latency', 'Arousal Regulation'
+  ];
+  const scores = dims.map(d => {
+    const base = clamp(gaussianRandom(baseCRI * 0.9, 10), 20, 100);
+    return { dim: d, score: Math.round(base) };
+  });
+  return scores;
+}
+
+const POSITIONS = ['FWD', 'MID', 'DEF', 'GK', 'WNG', 'CDM'];
+const ATHLETES_RAW = [
+  { id: 1,  name: 'Ramos V.',    initials: 'RV', pos: 'FWD', baseCRI: 88, baseHRV: 72, baseRT: 220 },
+  { id: 2,  name: 'Chen L.',     initials: 'CL', pos: 'MID', baseCRI: 74, baseHRV: 61, baseRT: 265 },
+  { id: 3,  name: 'Al-Farsi K.', initials: 'AK', pos: 'DEF', baseCRI: 44, baseHRV: 48, baseRT: 320 },
+  { id: 4,  name: 'Petrov N.',   initials: 'PN', pos: 'GK',  baseCRI: 91, baseHRV: 80, baseRT: 195 },
+  { id: 5,  name: 'Diallo S.',   initials: 'DS', pos: 'WNG', baseCRI: 67, baseHRV: 55, baseRT: 290 },
+  { id: 6,  name: 'Martini F.',  initials: 'MF', pos: 'CDM', baseCRI: 55, baseHRV: 52, baseRT: 310 },
+  { id: 7,  name: 'Torres A.',   initials: 'TA', pos: 'FWD', baseCRI: 82, baseHRV: 68, baseRT: 235 },
+  { id: 8,  name: 'Kim J.',      initials: 'KJ', pos: 'MID', baseCRI: 39, baseHRV: 42, baseRT: 375 },
+  { id: 9,  name: 'Okonkwo E.',  initials: 'OE', pos: 'DEF', baseCRI: 78, baseHRV: 65, baseRT: 250 },
+  { id: 10, name: 'Ivanov P.',   initials: 'IP', pos: 'WNG', baseCRI: 63, baseHRV: 57, baseRT: 300 },
+  { id: 11, name: 'Santos B.',   initials: 'SB', pos: 'CDM', baseCRI: 85, baseHRV: 70, baseRT: 225 },
+  { id: 12, name: 'Müller T.',   initials: 'MT', pos: 'DEF', baseCRI: 47, baseHRV: 45, baseRT: 355 },
+];
+
+// Build full athlete objects with live CRI (Gaussian drift from base)
+const ATHLETES = ATHLETES_RAW.map(a => {
+  const liveCRI = clamp(Math.round(gaussianRandom(a.baseCRI, 4)), 15, 100);
+  const liveHRV = clamp(Math.round(gaussianRandom(a.baseHRV, 4)), 18, 120);
+  const liveRT  = clamp(Math.round(gaussianRandom(a.baseRT, 15)), 180, 550);
+  const history = generateAthleteHistory(liveCRI, liveHRV, liveRT);
+  const cogSig  = generateCogSignature(liveCRI);
+  return {
+    ...a,
+    liveCRI, liveHRV, liveRT,
+    liveSRS: clamp(Math.round(100 - liveCRI * 0.6 - (liveHRV - 50) * 0.15), 0, 100),
+    history, cogSig
+  };
+});
+
+function getCRIState(cri) {
+  if (cri >= 80) return 'green';
+  if (cri >= 50) return 'amber';
+  return 'red';
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 2 — SQUAD GRID RENDERING
+═══════════════════════════════════════════════ */
+
+let selectedAthleteId = ATHLETES[0].id;
+
+function buildSquadGrid() {
+  const grid = document.getElementById('squadGrid');
+  grid.innerHTML = '';
+  ATHLETES.forEach(a => {
+    const state = getCRIState(a.liveCRI);
+    const tile = document.createElement('div');
+    tile.className = 'athlete-tile' + (a.id === selectedAthleteId ? ' selected' : '');
+    tile.dataset.state = state;
+    tile.dataset.id = a.id;
+    tile.onclick = () => selectAthlete(a.id);
+
+    // SVG gauge arc
+    const radius = 28;
+    const circumference = Math.PI * radius; // half circle = PI * r
+    const fillRatio = a.liveCRI / 100;
+    const dashOffset = circumference * (1 - fillRatio);
+
+    tile.innerHTML = `
+      <div class="tile-header">
+        <div class="athlete-avatar">${a.initials}</div>
+        <span class="tile-position">${a.pos}</span>
+      </div>
+      <div class="cri-gauge-wrap">
+        <svg class="cri-gauge-svg" viewBox="-36 -36 72 36">
+          <path class="gauge-track"
+            d="M -28 0 A 28 28 0 0 1 28 0"
+            style="--tile-color:var(--bg-elevated);--tile-glow:transparent"
+            stroke="var(--bg-elevated)"/>
+          <path class="gauge-fill"
+            d="M -28 0 A 28 28 0 0 1 28 0"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${dashOffset}"
+            data-target="${dashOffset}"
+            style="stroke:var(--tile-color)"/>
+        </svg>
+        <span class="cri-value">${a.liveCRI}</span>
+        <span class="cri-label">CRI</span>
+      </div>
+      <div class="athlete-name">${a.name}</div>
+      <div class="tile-metrics">
+        <div class="tile-metric">
+          <span class="tile-metric-val">${a.liveHRV}</span>
+          <span class="tile-metric-key">HRV</span>
+        </div>
+        <div class="tile-metric">
+          <span class="tile-metric-val">${a.liveRT}</span>
+          <span class="tile-metric-key">RT</span>
+        </div>
+        <div class="tile-metric">
+          <span class="tile-metric-val">${a.liveSRS}</span>
+          <span class="tile-metric-key">SRS</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(tile);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 3 — ATHLETE SELECTION & PANEL UPDATE
+═══════════════════════════════════════════════ */
+
+function selectAthlete(id) {
+  selectedAthleteId = id;
+
+  // Update tile selection state
+  document.querySelectorAll('.athlete-tile').forEach(t => {
+    t.classList.toggle('selected', parseInt(t.dataset.id) === id);
+  });
+
+  const a = ATHLETES.find(x => x.id === id);
+  if (!a) return;
+
+  document.getElementById('selectedAthleteBadge').textContent = a.name.toUpperCase() + ' · ' + a.pos;
+
+  // Update Timeline Tab
+  document.getElementById('tlAthleteName').textContent = a.name;
+  document.getElementById('tlAthletePos').textContent  = a.pos + ' · #' + a.id;
+  updateKPIs(a);
+  drawTimelineChart(a);
+
+  // Update Cognitive Signature Tab
+  document.getElementById('sigAthleteName').textContent = a.name;
+  document.getElementById('sigAthletePos').textContent  = a.pos + ' · CRI ' + a.liveCRI;
+  renderCogSignature(a);
+  drawRadar(a);
+
+  // Recompute risk with new athlete
+  computeRisk();
+}
+
+function updateKPIs(a) {
+  const hist = a.history;
+  const n = hist.cri.length;
+  const prevCRI = hist.cri[n - 2];
+  const prevHRV = hist.hrv[n - 2];
+  const prevRT  = hist.rt[n - 2];
+  const prevSRS = hist.srs[n - 2];
+
+  function deltaStr(curr, prev, invertBad = false) {
+    const d = curr - prev;
+    const sign = d >= 0 ? '+' : '';
+    return sign + d;
+  }
+  function deltaClass(curr, prev, higherGood = true) {
+    const better = higherGood ? curr >= prev : curr <= prev;
+    return better ? 'up' : 'down';
+  }
+
+  document.getElementById('kpiCRI').textContent       = a.liveCRI;
+  document.getElementById('kpiCRIDelta').textContent  = deltaStr(a.liveCRI, prevCRI);
+  document.getElementById('kpiCRIDelta').className    = 'kpi-delta ' + deltaClass(a.liveCRI, prevCRI, true);
+
+  document.getElementById('kpiHRV').textContent       = a.liveHRV;
+  document.getElementById('kpiHRVDelta').textContent  = deltaStr(a.liveHRV, prevHRV);
+  document.getElementById('kpiHRVDelta').className    = 'kpi-delta ' + deltaClass(a.liveHRV, prevHRV, true);
+
+  document.getElementById('kpiRT').textContent        = a.liveRT;
+  document.getElementById('kpiRTDelta').textContent   = deltaStr(a.liveRT, prevRT);
+  document.getElementById('kpiRTDelta').className     = 'kpi-delta ' + deltaClass(a.liveRT, prevRT, false);
+
+  document.getElementById('kpiSRS').textContent       = a.liveSRS;
+  document.getElementById('kpiSRSDelta').textContent  = deltaStr(a.liveSRS, prevSRS);
+  document.getElementById('kpiSRSDelta').className    = 'kpi-delta ' + deltaClass(a.liveSRS, prevSRS, false);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 4 — TIMELINE CHART (Canvas 2D)
+═══════════════════════════════════════════════ */
+
+function drawTimelineChart(athlete) {
+  const canvas = document.getElementById('timelineCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth  || 700;
+  const H = canvas.offsetHeight || 160;
+  canvas.width  = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { top: 16, right: 12, bottom: 26, left: 32 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top  - pad.bottom;
+
+  const criData = athlete.history.cri;
+  const hrvData = athlete.history.hrv;
+  const n = criData.length;
+
+  // Draw subtle grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.top + (chartH / 4) * g;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + chartW, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels
+  ctx.fillStyle = 'rgba(90,112,144,0.7)';
+  ctx.font = '9px Space Mono, monospace';
+  ctx.textAlign = 'right';
+  ['100', '75', '50', '25', '0'].forEach((v, i) => {
+    const y = pad.top + (chartH / 4) * i;
+    ctx.fillText(v, pad.left - 5, y + 3);
+  });
+
+  // X-axis day labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(90,112,144,0.5)';
+  [0, 3, 6, 9, 13].forEach(i => {
+    const x = pad.left + (chartW / (n - 1)) * i;
+    const label = i === 13 ? 'Today' : '-' + (13 - i) + 'd';
+    ctx.fillText(label, x, H - 6);
+  });
+
+  // Normalize helpers
+  const normVal = (v, lo, hi) => clamp((v - lo) / (hi - lo), 0, 1);
+  const xAt = i => pad.left + (chartW / (n - 1)) * i;
+  const yAt = (v, lo, hi) => pad.top + chartH * (1 - normVal(v, lo, hi));
+
+  // ── CRI area fill
+  const criGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+  criGrad.addColorStop(0,   'rgba(0,200,255,0.2)');
+  criGrad.addColorStop(1,   'rgba(0,200,255,0.0)');
+
+  ctx.beginPath();
+  criData.forEach((v, i) => {
+    const x = xAt(i);
+    const y = yAt(v, 0, 100);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(xAt(n - 1), pad.top + chartH);
+  ctx.lineTo(xAt(0), pad.top + chartH);
+  ctx.closePath();
+  ctx.fillStyle = criGrad;
+  ctx.fill();
+
+  // ── CRI line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00c8ff';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  criData.forEach((v, i) => {
+    const x = xAt(i);
+    const y = yAt(v, 0, 100);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // ── HRV line (normalized to 0–120 → mapped onto same 0–100 axis)
+  const hrvGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+  hrvGrad.addColorStop(0, 'rgba(124,92,252,0.12)');
+  hrvGrad.addColorStop(1, 'rgba(124,92,252,0.0)');
+
+  ctx.beginPath();
+  hrvData.forEach((v, i) => {
+    const x = xAt(i);
+    const y = yAt(v, 0, 120);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(xAt(n - 1), pad.top + chartH);
+  ctx.lineTo(xAt(0), pad.top + chartH);
+  ctx.closePath();
+  ctx.fillStyle = hrvGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#7c5cfc';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  hrvData.forEach((v, i) => {
+    const x = xAt(i);
+    const y = yAt(v, 0, 120);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Dot at latest CRI
+  const lastX = xAt(n - 1);
+  const lastY = yAt(criData[n - 1], 0, 100);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#00c8ff';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,200,255,0.3)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.lineWidth = 1;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 5 — COGNITIVE SIGNATURE & RADAR
+═══════════════════════════════════════════════ */
+
+function renderCogSignature(athlete) {
+  const grid = document.getElementById('cogDimsGrid');
+  grid.innerHTML = '';
+  athlete.cogSig.forEach(d => {
+    const state = getCRIState(d.score);
+    const colorMap = { green: 'var(--cri-green)', amber: 'var(--cri-amber)', red: 'var(--cri-red)' };
+    const card = document.createElement('div');
+    card.className = 'cog-dim';
+    card.innerHTML = `
+      <div class="cog-dim-header">
+        <span class="cog-dim-name">${d.dim}</span>
+        <span class="cog-dim-score" style="color:${colorMap[state]}">${d.score}</span>
+      </div>
+      <div class="cog-dim-bar">
+        <div class="cog-dim-fill" style="width:${d.score}%;background:linear-gradient(90deg,${colorMap[state]}88,${colorMap[state]})"></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function drawRadar(athlete) {
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = 240;
+  canvas.width  = size * window.devicePixelRatio;
+  canvas.height = size * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  ctx.clearRect(0, 0, size, size);
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const maxR = 90;
+  const n = athlete.cogSig.length;
+  const angleStep = (Math.PI * 2) / n;
+
+  // Draw web rings
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75, 1.0].forEach(ratio => {
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const r = maxR * ratio;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  });
+
+  // Draw axis lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 0; i < n; i++) {
+    const angle = i * angleStep - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + maxR * Math.cos(angle), cy + maxR * Math.sin(angle));
+    ctx.stroke();
+  }
+
+  // Draw data polygon fill
+  const dataGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+  dataGrad.addColorStop(0, 'rgba(124,92,252,0.3)');
+  dataGrad.addColorStop(1, 'rgba(0,200,255,0.1)');
+
+  ctx.beginPath();
+  athlete.cogSig.forEach((d, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const r = maxR * (d.score / 100);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = dataGrad;
+  ctx.fill();
+
+  // Draw data polygon stroke
+  ctx.beginPath();
+  athlete.cogSig.forEach((d, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const r = maxR * (d.score / 100);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(0,200,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Draw data points
+  athlete.cogSig.forEach((d, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const r = maxR * (d.score / 100);
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#00c8ff';
+    ctx.fill();
+  });
+
+  // Draw labels
+  ctx.fillStyle = 'rgba(138,155,184,0.85)';
+  ctx.font = `${8 * window.devicePixelRatio / window.devicePixelRatio}px DM Sans, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const labelR = maxR + 16;
+  const shortLabels = ['S.ATT', 'INH.C', 'W.MEM', 'P.SPD', 'DEC.L', 'ARO.R'];
+  shortLabels.forEach((lbl, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const x = cx + labelR * Math.cos(angle);
+    const y = cy + labelR * Math.sin(angle);
+    ctx.fillText(lbl, x, y);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 6 — SESSION PLANNER / RISK COMPUTATION
+   CLIE: Session Risk Score (SRS)
+═══════════════════════════════════════════════ */
+
+function syncRange(inputId, displayId) {
+  document.getElementById(displayId).textContent = document.getElementById(inputId).value;
+}
+
+const SESSION_TYPE_WEIGHTS = {
+  recovery:       { cogLoad: 0.3, physDemand: 0.3 },
+  technical:      { cogLoad: 0.6, physDemand: 0.5 },
+  tactical:       { cogLoad: 0.8, physDemand: 0.65 },
+  high_intensity: { cogLoad: 0.5, physDemand: 0.9 },
+  match:          { cogLoad: 1.0, physDemand: 1.0 },
+};
+
+function computeRisk() {
+  const intensity  = parseInt(document.getElementById('intensity').value);
+  const duration   = parseInt(document.getElementById('duration').value);
+  const complexity = parseInt(document.getElementById('complexity').value);
+  const recovery   = parseInt(document.getElementById('recovery').value);
+  const typeKey    = document.getElementById('sessionType').value;
+  const criOver    = parseInt(document.getElementById('criOverride').value) || 0;
+
+  const athlete = ATHLETES.find(a => a.id === selectedAthleteId);
+  const athleteCRI = (criOver > 0 ? criOver : (athlete ? athlete.liveCRI : 70));
+
+  const { cogLoad, physDemand } = SESSION_TYPE_WEIGHTS[typeKey];
+
+  // CLIE — Session Risk Matrix computation
+  // Physical intensity factor: normalized intensity × physDemand weight × duration loading
+  const physFactor  = clamp((intensity / 10) * physDemand * (1 + (duration - 60) / 200), 0, 1);
+
+  // Cognitive load factor: tactical complexity × cogLoad weight × inverse CRI (lower CRI = higher risk)
+  const criPenalty  = clamp((100 - athleteCRI) / 100, 0, 1);
+  const cogFactor   = clamp((complexity / 10) * cogLoad * (1 + criPenalty * 0.6), 0, 1);
+
+  // Recovery deficit factor: shorter recovery = higher risk (below 24h increases risk)
+  const recFactor   = clamp(1 - (recovery / 48), 0, 1) * 0.6;
+
+  // Composite SRS: weighted sum with z-score-like normalization
+  const rawSRS = (physFactor * 0.38 + cogFactor * 0.42 + recFactor * 0.20) * 100;
+  const SRS    = clamp(Math.round(rawSRS), 0, 100);
+
+  // Component breakdown
+  const rfI = Math.round(physFactor * 100);
+  const rfC = Math.round(cogFactor  * 100);
+  const rfR = Math.round(recFactor  * 100);
+
+  // Determine band
+  let band, bandClass, color;
+  if (SRS < 35) {
+    band = 'LOW RISK'; bandClass = 'risk-band-low'; color = 'var(--cri-green)';
+  } else if (SRS < 65) {
+    band = 'MODERATE'; bandClass = 'risk-band-medium'; color = 'var(--cri-amber)';
+  } else {
+    band = 'HIGH RISK'; bandClass = 'risk-band-high'; color = 'var(--cri-red)';
+  }
+
+  document.getElementById('riskScoreVal').textContent     = SRS;
+  document.getElementById('riskScoreVal').style.color     = color;
+  document.getElementById('riskBandLabel').textContent    = band;
+  document.getElementById('riskBandLabel').className      = 'risk-band ' + bandClass;
+  document.getElementById('riskBarFill').style.width      = SRS + '%';
+  document.getElementById('riskBarFill').style.background = color;
+  document.getElementById('rfIntensity').textContent      = rfI;
+  document.getElementById('rfCognitive').textContent      = rfC;
+  document.getElementById('rfRecovery').textContent       = rfR;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 7 — TAB SWITCHING
+═══════════════════════════════════════════════ */
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.intel-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+
+  // Re-draw charts if needed
+  if (tabId === 'timeline') {
+    const a = ATHLETES.find(x => x.id === selectedAthleteId);
+    if (a) drawTimelineChart(a);
+  }
+  if (tabId === 'signature') {
+    const a = ATHLETES.find(x => x.id === selectedAthleteId);
+    if (a) drawRadar(a);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 8 — REACTION-TIME MINI-GAME
+═══════════════════════════════════════════════ */
+
+const GAME = {
+  running:      false,
+  timeLeft:     60,
+  hits:         0,
+  misses:       0,
+  latencies:    [],
+  timer:        null,
+  spawnTimer:   null,
+  activeTarget: null,
+  targetSpawn:  null,
+};
+
+function startReactionGame() {
+  if (GAME.running) return;
+
+  // Reset state
+  GAME.running   = false;
+  GAME.timeLeft  = 60;
+  GAME.hits      = 0;
+  GAME.misses    = 0;
+  GAME.latencies = [];
+  GAME.activeTarget = null;
+
+  document.getElementById('reactionResults').style.display = 'none';
+  document.getElementById('gameIdleState').style.display = 'none';
+  document.getElementById('btnStartGame').disabled = true;
+  document.getElementById('statHits').textContent  = '0';
+  document.getElementById('statAvgRT').textContent = '—';
+
+  // 3-second countdown
+  const overlay = document.getElementById('countdownOverlay');
+  const countNum = document.getElementById('countdownNum');
+  overlay.style.display = 'flex';
+  let count = 3;
+  countNum.textContent = count;
+
+  const countInterval = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(countInterval);
+      overlay.style.display = 'none';
+      runGame();
+    } else {
+      countNum.textContent = count;
+      countNum.style.animation = 'none';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        countNum.style.animation = 'pop 0.5s ease';
+      }));
+    }
+  }, 800);
+}
+
+function runGame() {
+  GAME.running = true;
+  const hud = document.getElementById('gameHud');
+  hud.classList.remove('hidden');
+  document.getElementById('hudTimer').textContent = '60';
+  document.getElementById('hudHits').textContent  = '0 HIT';
+
+  // Count-down ticker
+  GAME.timer = setInterval(() => {
+    GAME.timeLeft--;
+    const timerEl = document.getElementById('hudTimer');
+    timerEl.textContent = GAME.timeLeft;
+    timerEl.className = 'hud-timer' + (GAME.timeLeft <= 10 ? ' urgent' : '');
+    if (GAME.timeLeft <= 0) {
+      endGame();
+    }
+  }, 1000);
+
+  // Schedule first target
+  scheduleNextTarget();
+}
+
+function scheduleNextTarget() {
+  if (!GAME.running) return;
+  const delay = 600 + Math.random() * 1400; // 0.6s – 2.0s
+  GAME.spawnTimer = setTimeout(spawnTarget, delay);
+}
+
+function spawnTarget() {
+  if (!GAME.running) return;
+
+  // Remove any previous unhit target (counts as a miss)
+  if (GAME.activeTarget) {
+    GAME.activeTarget.remove();
+    GAME.activeTarget = null;
+    GAME.misses++;
+  }
+
+  const arena = document.getElementById('gameArena');
+  const arenaRect = arena.getBoundingClientRect();
+  const pad = 28;
+
+  // Random position
+  const x = pad + Math.random() * (arenaRect.width  - pad * 2);
+  const y = pad + Math.random() * (arenaRect.height - pad * 2);
+
+  const target = document.createElement('div');
+  target.className = 'stimulus-target';
+  target.style.left = x + 'px';
+  target.style.top  = y + 'px';
+
+  GAME.targetSpawn = performance.now();
+
+  target.onclick = (e) => {
+    e.stopPropagation();
+    if (!GAME.running) return;
+
+    const latency = Math.round(performance.now() - GAME.targetSpawn);
+    GAME.latencies.push(latency);
+    GAME.hits++;
+
+    // Visual hit feedback
+    target.classList.add('hit');
+    target.onclick = null;
+    setTimeout(() => { if (target.parentNode) target.remove(); }, 250);
+    GAME.activeTarget = null;
+
+    // Update HUD
+    document.getElementById('hudHits').textContent = GAME.hits + ' HIT';
+    const avgRT = Math.round(GAME.latencies.reduce((a,b) => a+b, 0) / GAME.latencies.length);
+    document.getElementById('statHits').textContent  = GAME.hits;
+    document.getElementById('statAvgRT').textContent = avgRT + 'ms';
+
+    scheduleNextTarget();
+  };
+
+  GAME.activeTarget = target;
+  arena.appendChild(target);
+
+  // Auto-expire target after 2.2s if not hit
+  setTimeout(() => {
+    if (target.parentNode && GAME.activeTarget === target) {
+      target.remove();
+      GAME.activeTarget = null;
+      GAME.misses++;
+      if (GAME.running) scheduleNextTarget();
+    }
+  }, 2200);
+}
+
+function endGame() {
+  GAME.running = false;
+  clearInterval(GAME.timer);
+  clearTimeout(GAME.spawnTimer);
+
+  // Remove any lingering target
+  if (GAME.activeTarget) {
+    GAME.activeTarget.remove();
+    GAME.activeTarget = null;
+  }
+
+  document.getElementById('gameHud').classList.add('hidden');
+  document.getElementById('btnStartGame').disabled = false;
+  document.getElementById('gameIdleState').style.display = 'flex';
+
+  if (GAME.latencies.length === 0) {
+    document.getElementById('gameIdleState').querySelector('.game-idle-text').textContent = 'NO DATA CAPTURED — TRY AGAIN';
+    return;
+  }
+
+  // Compute stats
+  const mean = Math.round(GAME.latencies.reduce((a,b) => a+b, 0) / GAME.latencies.length);
+  const min  = Math.min(...GAME.latencies);
+  const total = GAME.hits + GAME.misses;
+  const acc  = total > 0 ? Math.round((GAME.hits / total) * 100) : 0;
+
+  // CRI contribution: decision latency sub-dimension
+  // Formula: 100 - linear map of mean RT (200ms=100, 500ms=0)
+  const criContrib = clamp(Math.round(100 - ((mean - 200) / 300) * 100), 0, 100);
+
+  document.getElementById('resMeanRT').textContent    = mean + 'ms';
+  document.getElementById('resMinRT').textContent     = min + 'ms';
+  document.getElementById('resAccuracy').textContent  = acc + '%';
+  document.getElementById('resCRIContrib').textContent = criContrib;
+
+  // Build latency histogram (16 buckets 150–600ms)
+  const histEl = document.getElementById('latencyHistogram');
+  histEl.innerHTML = '';
+  const buckets = 16;
+  const lo = 150, hi = 600;
+  const bucketSize = (hi - lo) / buckets;
+  const counts = new Array(buckets).fill(0);
+  GAME.latencies.forEach(rt => {
+    const idx = clamp(Math.floor((rt - lo) / bucketSize), 0, buckets - 1);
+    counts[idx]++;
+  });
+  const maxCount = Math.max(...counts, 1);
+  counts.forEach(c => {
+    const bar = document.createElement('div');
+    bar.className = 'histo-bar';
+    bar.style.height = Math.round((c / maxCount) * 100) + '%';
+    bar.title = c + ' hits';
+    histEl.appendChild(bar);
+  });
+
+  document.getElementById('reactionResults').style.display = 'block';
+  document.getElementById('gameIdleState').style.display = 'none';
+
+  // Inject feed event
+  const state = criContrib >= 80 ? 'green' : criContrib >= 50 ? 'amber' : 'red';
+  injectFeedEvent(
+    `Reaction test complete — <strong>mean ${mean}ms</strong>, accuracy ${acc}%, CRI-DL contribution: ${criContrib}`,
+    state
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 9 — LIVE EVENT FEED
+═══════════════════════════════════════════════ */
+
+const FEED_EVENTS = [
+  { text: '<strong>Petrov N.</strong> CRI spike detected — 91 → recovery phase recommended', color: 'var(--cri-green)' },
+  { text: '<strong>Al-Farsi K.</strong> HRV drop below threshold (48ms) — flag for review', color: 'var(--cri-amber)' },
+  { text: '<strong>Kim J.</strong> dual-task interference index elevated — reduce session intensity', color: 'var(--cri-red)' },
+  { text: 'CLIE pipeline: z-score normalisation complete — rolling window (14d) updated', color: 'var(--accent-cyan)' },
+  { text: '<strong>Ramos V.</strong> sustained attention sub-dimension improved +12pts', color: 'var(--cri-green)' },
+  { text: 'Squad average CRI: 67.3 — 3 athletes below readiness threshold', color: 'var(--cri-amber)' },
+  { text: 'cvxEDA decomposition complete — arousal regulation signals updated', color: 'var(--accent-violet)' },
+  { text: '<strong>Santos B.</strong> Session Risk Score computed — moderate band (38)', color: 'var(--cri-amber)' },
+  { text: 'HRV RMSSD stream synchronised — 8-second drift interval active', color: 'var(--accent-cyan)' },
+];
+
+let feedEventIdx = 0;
+
+function injectFeedEvent(text, stateOrColor) {
+  const colorMap = { green: 'var(--cri-green)', amber: 'var(--cri-amber)', red: 'var(--cri-red)' };
+  const dotColor = colorMap[stateOrColor] || stateOrColor || 'var(--accent-cyan)';
+
+  const feed = document.getElementById('feedItems');
+  const now  = new Date();
+  const ts   = now.getHours().toString().padStart(2,'0') + ':' +
+               now.getMinutes().toString().padStart(2,'0') + ':' +
+               now.getSeconds().toString().padStart(2,'0');
+
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <span class="feed-dot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}40"></span>
+    <div class="feed-body">
+      <div class="feed-text">${text}</div>
+      <div class="feed-time">${ts}</div>
+    </div>
+  `;
+
+  feed.insertBefore(item, feed.firstChild);
+
+  // Keep max 20 items
+  while (feed.children.length > 20) {
+    feed.removeChild(feed.lastChild);
+  }
+}
+
+function startFeedSimulation() {
+  const inject = () => {
+    const ev = FEED_EVENTS[feedEventIdx % FEED_EVENTS.length];
+    injectFeedEvent(ev.text, ev.color);
+    feedEventIdx++;
+    setTimeout(inject, 4000 + Math.random() * 5000);
+  };
+  inject();
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 10 — DATA DRIFT (8-second Gaussian refresh)
+═══════════════════════════════════════════════ */
+
+function driftAthleteData() {
+  ATHLETES.forEach(a => {
+    // Apply small Gaussian drift to live values
+    a.liveCRI = clamp(Math.round(gaussianRandom(a.liveCRI, 2.5)), 15, 100);
+    a.liveHRV = clamp(Math.round(gaussianRandom(a.liveHRV, 2)), 18, 120);
+    a.liveRT  = clamp(Math.round(gaussianRandom(a.liveRT, 8)),  180, 550);
+    a.liveSRS = clamp(Math.round(100 - a.liveCRI * 0.6 - (a.liveHRV - 50) * 0.15), 0, 100);
+
+    // Push latest value into history (rolling window)
+    a.history.cri.push(a.liveCRI);  a.history.cri.shift();
+    a.history.hrv.push(a.liveHRV);  a.history.hrv.shift();
+    a.history.rt.push(a.liveRT);    a.history.rt.shift();
+    a.history.srs.push(a.liveSRS);  a.history.srs.shift();
+
+    // Re-generate cog sig with slight drift
+    a.cogSig = generateCogSignature(a.liveCRI);
+  });
+
+  // Rebuild squad grid
+  buildSquadGrid();
+
+  // Update selected athlete panels
+  const selected = ATHLETES.find(x => x.id === selectedAthleteId);
+  if (selected) {
+    updateKPIs(selected);
+    const activeTab = document.querySelector('.intel-tab.active').dataset.tab;
+    if (activeTab === 'timeline') drawTimelineChart(selected);
+    if (activeTab === 'signature') { renderCogSignature(selected); drawRadar(selected); }
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 11 — CLOCK
+═══════════════════════════════════════════════ */
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('liveClock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' +
+    now.getMinutes().toString().padStart(2,'0') + ':' +
+    now.getSeconds().toString().padStart(2,'0');
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION 12 — INITIALISATION
+═══════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildSquadGrid();
+  selectAthlete(selectedAthleteId);
+  computeRisk();
+  startFeedSimulation();
+
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // 8-second Gaussian drift
+  setInterval(driftAthleteData, 8000);
+
+  // Initial feed events
+  setTimeout(() => injectFeedEvent('NeuroPace CLIE engine initialised — 12 athletes loaded', 'var(--accent-cyan)'), 500);
+  setTimeout(() => injectFeedEvent('Gaussian simulation active — Box-Muller sampling engaged', 'var(--accent-violet)'), 1800);
+});
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FASTAPI BACKEND REFERENCE  —  app.py
+     Extract this block to app.py to run the backend server.
+     pip install fastapi uvicorn numpy
+     uvicorn app:app --reload --port 8000
+═══════════════════════════════════════════════════════════════ -->
+<script type="text/python-backend" id="appPyReference">
+"""
+app.py — NeuroPace Analytics · FastAPI Core Engine & Analytical Pipeline
+UniHawk × EU Business School · Level Up and Let's Play Competition
+
+Run: uvicorn app:app --reload --port 8000
+"""
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Optional
+import numpy as np
+import json
+import time
+from datetime import datetime, timedelta
+
+app = FastAPI(
+    title="NeuroPace Analytics API",
+    description="Cognitive Load Inference Engine — CLIE v2.1",
+    version="2.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ─────────────────────────────────────────────────────────────
+#  DATA MODELS
+# ─────────────────────────────────────────────────────────────
+
+class TelemetryRecord(BaseModel):
+    athlete_id: int
+    hrv_rmssd: float          # ms
+    reaction_time_ms: float   # ms
+    dual_task_score: float    # 0–100
+    arousal_index: float      # 0–10
+    session_load: float       # 0–100
+    timestamp: Optional[str] = None
+
+
+class TelemetryBatch(BaseModel):
+    records: List[TelemetryRecord]
+
+
+class CRIRequest(BaseModel):
+    athlete_id: int
+    hrv_series: List[float]          # 14-day rolling HRV (RMSSD)
+    rt_series: List[float]           # 14-day rolling reaction-time ms
+    dual_task_series: List[float]    # 14-day dual-task interference index
+    arousal_series: List[float]      # 14-day arousal regulation values
+    window_size: Optional[int] = 7  # rolling window for z-score
+
+
+class SessionPlannerRequest(BaseModel):
+    athlete_id: int
+    intensity: int          # 1–10
+    duration_minutes: int   # 15–180
+    tactical_complexity: int # 1–10
+    recovery_hours: float   # hours since last load
+    session_type: str       # recovery|technical|tactical|high_intensity|match
+    athlete_cri: Optional[float] = None  # override; None = compute from CLIE
+
+
+# ─────────────────────────────────────────────────────────────
+#  MOCK DATASET GENERATOR
+# ─────────────────────────────────────────────────────────────
+
+ATHLETE_PROFILES = {
+    1:  {"name": "Ramos V.",    "pos": "FWD", "base_hrv": 72, "base_rt": 220, "base_cri": 88},
+    2:  {"name": "Chen L.",     "pos": "MID", "base_hrv": 61, "base_rt": 265, "base_cri": 74},
+    3:  {"name": "Al-Farsi K.", "pos": "DEF", "base_hrv": 48, "base_rt": 320, "base_cri": 44},
+    4:  {"name": "Petrov N.",   "pos": "GK",  "base_hrv": 80, "base_rt": 195, "base_cri": 91},
+    5:  {"name": "Diallo S.",   "pos": "WNG", "base_hrv": 55, "base_rt": 290, "base_cri": 67},
+    6:  {"name": "Martini F.",  "pos": "CDM", "base_hrv": 52, "base_rt": 310, "base_cri": 55},
+    7:  {"name": "Torres A.",   "pos": "FWD", "base_hrv": 68, "base_rt": 235, "base_cri": 82},
+    8:  {"name": "Kim J.",      "pos": "MID", "base_hrv": 42, "base_rt": 375, "base_cri": 39},
+    9:  {"name": "Okonkwo E.",  "pos": "DEF", "base_hrv": 65, "base_rt": 250, "base_cri": 78},
+    10: {"name": "Ivanov P.",   "pos": "WNG", "base_hrv": 57, "base_rt": 300, "base_cri": 63},
+    11: {"name": "Santos B.",   "pos": "CDM", "base_hrv": 70, "base_rt": 225, "base_cri": 85},
+    12: {"name": "Müller T.",   "pos": "DEF", "base_hrv": 45, "base_rt": 355, "base_cri": 47},
+}
+
+
+def generate_gaussian_series(base: float, std: float, n: int, lo: float, hi: float) -> np.ndarray:
+    """Generate a realistic drift series using Box-Muller Gaussian sampling."""
+    series = np.zeros(n)
+    val = base
+    for i in range(n):
+        val += np.random.normal(0, std)
+        series[i] = np.clip(val, lo, hi)
+    return np.round(series, 2)
+
+
+def generate_athlete_mock_data(athlete_id: int, days: int = 14) -> dict:
+    """Seed realistic athlete telemetry for CLIE initialisation."""
+    if athlete_id not in ATHLETE_PROFILES:
+        raise ValueError(f"Unknown athlete_id: {athlete_id}")
+
+    p = ATHLETE_PROFILES[athlete_id]
+    rng = np.random.default_rng(athlete_id * 42)
+
+    hrv_series    = np.clip(rng.normal(p["base_hrv"], 6, days), 20, 120).tolist()
+    rt_series     = np.clip(rng.normal(p["base_rt"],  18, days), 180, 550).tolist()
+    dt_series     = np.clip(rng.normal(65, 12, days), 10, 100).tolist()
+    arousal_series = np.clip(rng.normal(5.5, 1.2, days), 1, 10).tolist()
+
+    timestamps = [
+        (datetime.utcnow() - timedelta(days=days - i)).isoformat()
+        for i in range(days)
+    ]
+
+    return {
+        "athlete_id":     athlete_id,
+        "name":           p["name"],
+        "position":       p["pos"],
+        "hrv_series":     [round(v, 1) for v in hrv_series],
+        "rt_series":      [round(v, 1) for v in rt_series],
+        "dual_task_series": [round(v, 1) for v in dt_series],
+        "arousal_series": [round(v, 2) for v in arousal_series],
+        "timestamps":     timestamps,
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+#  CLIE — COGNITIVE LOAD INFERENCE ENGINE
+# ─────────────────────────────────────────────────────────────
+
+def zscore_series(arr: np.ndarray) -> np.ndarray:
+    """Standard z-score normalisation. Returns zeros on zero variance."""
+    std = arr.std()
+    if std == 0:
+        return np.zeros_like(arr)
+    return (arr - arr.mean()) / std
+
+
+def rolling_window_mean(arr: np.ndarray, window: int) -> np.ndarray:
+    """Compute rolling window mean — pads with first value."""
+    result = np.zeros_like(arr)
+    for i in range(len(arr)):
+        start = max(0, i - window + 1)
+        result[i] = arr[start:i + 1].mean()
+    return result
+
+
+def compute_cri_vector(
+    hrv: np.ndarray,
+    rt: np.ndarray,
+    dual_task: np.ndarray,
+    arousal: np.ndarray,
+    window: int = 7,
+) -> np.ndarray:
+    """
+    CLIE Core: Cognitive Readiness Index computation.
+
+    CRI = weighted combination of z-score normalised sub-dimensions,
+    then mapped to 0–100 scale using logistic transformation.
+
+    Weights (derived from dual-task interference literature):
+      HRV (RMSSD):            30% — autonomic readiness
+      Reaction Time:          25% — processing speed proxy
+      Dual-Task Interference: 25% — working-memory load
+      Arousal Regulation:     20% — arousal modulation quality
+    """
+    # Rolling window smoothing
+    hrv_smooth = rolling_window_mean(hrv, window)
+    rt_smooth  = rolling_window_mean(rt,  window)
+    dt_smooth  = rolling_window_mean(dual_task, window)
+    ar_smooth  = rolling_window_mean(arousal, window)
+
+    # Z-score normalise
+    hrv_z = zscore_series(hrv_smooth)
+    rt_z  = zscore_series(rt_smooth)   # higher RT = lower readiness → invert
+    dt_z  = zscore_series(dt_smooth)
+    ar_z  = zscore_series(ar_smooth)
+
+    # Invert RT and DT (higher value = worse cognition)
+    rt_z_inv = -rt_z
+    dt_z_inv = -dt_z
+
+    # Weighted composite (z-score domain)
+    composite = (
+        0.30 * hrv_z    +
+        0.25 * rt_z_inv +
+        0.25 * dt_z_inv +
+        0.20 * ar_z
+    )
+
+    # Logistic sigmoid mapping to 0–100
+    cri_raw = 100 / (1 + np.exp(-composite * 1.2))
+
+    # Anchor to population norm (mean ≈ 65)
+    shift = 65 - cri_raw.mean()
+    cri = np.clip(cri_raw + shift, 5, 100)
+
+    return np.round(cri, 1)
+
+
+def compute_session_risk_score(
+    intensity: int,
+    duration: int,
+    complexity: int,
+    recovery_hours: float,
+    session_type: str,
+    athlete_cri: float,
+) -> dict:
+    """
+    Session Risk Matrix — CLIE SRS computation.
+    Returns risk score 0–100 + component breakdown.
+    """
+    type_weights = {
+        "recovery":       {"cog": 0.3, "phys": 0.3},
+        "technical":      {"cog": 0.6, "phys": 0.5},
+        "tactical":       {"cog": 0.8, "phys": 0.65},
+        "high_intensity": {"cog": 0.5, "phys": 0.9},
+        "match":          {"cog": 1.0, "phys": 1.0},
+    }
+    w = type_weights.get(session_type, type_weights["tactical"])
+
+    cri_penalty = np.clip((100 - athlete_cri) / 100, 0, 1)
+
+    phys_factor = np.clip(
+        (intensity / 10) * w["phys"] * (1 + (duration - 60) / 200),
+        0, 1
+    )
+    cog_factor = np.clip(
+        (complexity / 10) * w["cog"] * (1 + cri_penalty * 0.6),
+        0, 1
+    )
+    rec_factor = np.clip(1 - (recovery_hours / 48), 0, 1) * 0.6
+
+    raw_srs = (phys_factor * 0.38 + cog_factor * 0.42 + rec_factor * 0.20) * 100
+    srs = int(np.clip(raw_srs, 0, 100))
+
+    band = "LOW"   if srs < 35 else "MODERATE" if srs < 65 else "HIGH"
+
+    return {
+        "srs":            srs,
+        "band":           band,
+        "component_phys": round(float(phys_factor) * 100, 1),
+        "component_cog":  round(float(cog_factor)  * 100, 1),
+        "component_rec":  round(float(rec_factor)  * 100, 1),
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+#  ENDPOINTS
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/")
+def root():
+    return {
+        "platform": "NeuroPace Analytics",
+        "engine":   "CLIE v2.1",
+        "status":   "operational",
+        "athletes": len(ATHLETE_PROFILES),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/api/athletes")
+def list_athletes():
+    """Return all athlete profiles with seeded mock data."""
+    result = []
+    for aid in ATHLETE_PROFILES:
+        data = generate_athlete_mock_data(aid)
+        # Compute current CRI from last window
+        hrv = np.array(data["hrv_series"])
+        rt  = np.array(data["rt_series"])
+        dt  = np.array(data["dual_task_series"])
+        ar  = np.array(data["arousal_series"])
+        cri_series = compute_cri_vector(hrv, rt, dt, ar)
+        data["cri_series"]   = cri_series.tolist()
+        data["current_cri"]  = float(cri_series[-1])
+        data["current_hrv"]  = data["hrv_series"][-1]
+        data["current_rt"]   = data["rt_series"][-1]
+        result.append(data)
+    return {"athletes": result}
+
+
+@app.post("/api/ingest")
+def ingest_telemetry(batch: TelemetryBatch):
+    """
+    Accepts mock telemetry records (CSV or JSON).
+    Validates, z-score filters outliers, and returns cleaned payload.
+    """
+    if not batch.records:
+        raise HTTPException(status_code=400, detail="Empty telemetry batch.")
+
+    cleaned = []
+    rejected = 0
+
+    # Build arrays per field for z-score outlier filtering
+    hrv_vals = np.array([r.hrv_rmssd        for r in batch.records])
+    rt_vals  = np.array([r.reaction_time_ms for r in batch.records])
+    dt_vals  = np.array([r.dual_task_score  for r in batch.records])
+    ar_vals  = np.array([r.arousal_index    for r in batch.records])
+
+    hrv_z = zscore_series(hrv_vals)
+    rt_z  = zscore_series(rt_vals)
+
+    for i, r in enumerate(batch.records):
+        # Reject records with |z| > 3.5 on primary signals
+        if abs(hrv_z[i]) > 3.5 or abs(rt_z[i]) > 3.5:
+            rejected += 1
+            continue
+        ts = r.timestamp or datetime.utcnow().isoformat()
+        cleaned.append({
+            "athlete_id":      r.athlete_id,
+            "hrv_rmssd":       round(r.hrv_rmssd, 2),
+            "reaction_time_ms": round(r.reaction_time_ms, 2),
+            "dual_task_score": round(r.dual_task_score, 2),
+            "arousal_index":   round(r.arousal_index, 2),
+            "session_load":    round(r.session_load, 2),
+            "timestamp":       ts,
+            "hrv_zscore":      round(float(hrv_z[i]), 3),
+            "rt_zscore":       round(float(rt_z[i]), 3),
+        })
+
+    return {
+        "status":         "ok",
+        "total_received": len(batch.records),
+        "accepted":       len(cleaned),
+        "rejected":       rejected,
+        "records":        cleaned,
+    }
+
+
+@app.post("/api/compute-cri")
+def compute_cri_endpoint(req: CRIRequest):
+    """
+    CLIE Core Endpoint — Cognitive Readiness Index.
+    Executes full pipeline: z-score, rolling window, vector computation.
+    """
+    if len(req.hrv_series) < 3:
+        raise HTTPException(status_code=400, detail="Minimum 3 data points required.")
+
+    hrv = np.array(req.hrv_series,        dtype=float)
+    rt  = np.array(req.rt_series,         dtype=float)
+    dt  = np.array(req.dual_task_series,  dtype=float)
+    ar  = np.array(req.arousal_series,    dtype=float)
+
+    # Enforce equal length
+    min_len = min(len(hrv), len(rt), len(dt), len(ar))
+    hrv, rt, dt, ar = hrv[:min_len], rt[:min_len], dt[:min_len], ar[:min_len]
+
+    window = max(2, min(req.window_size, min_len))
+    cri_series = compute_cri_vector(hrv, rt, dt, ar, window=window)
+
+    current_cri = float(cri_series[-1])
+    state = "green" if current_cri >= 80 else "amber" if current_cri >= 50 else "red"
+
+    # Compute sub-dimension scores for cognitive signature
+    cog_sig = {
+        "sustained_attention":  float(np.clip(np.mean(dt)  * 0.9  + np.random.normal(0, 3), 10, 100)),
+        "inhibitory_control":   float(np.clip(np.mean(hrv) * 0.85 + np.random.normal(0, 4), 10, 100)),
+        "working_memory_load":  float(np.clip(100 - np.mean(dt) * 0.4 + np.random.normal(0, 5), 10, 100)),
+        "processing_speed":     float(np.clip(100 - (np.mean(rt) - 200) / 3.5, 10, 100)),
+        "decision_latency":     float(np.clip(100 - (np.mean(rt) - 180) / 3.8, 10, 100)),
+        "arousal_regulation":   float(np.clip(np.mean(ar) * 9 + np.random.normal(0, 3), 10, 100)),
+    }
+
+    return {
+        "athlete_id":       req.athlete_id,
+        "cri_series":       cri_series.tolist(),
+        "current_cri":      round(current_cri, 1),
+        "state":            state,
+        "window_used":      window,
+        "n_points":         min_len,
+        "cognitive_signature": {k: round(v, 1) for k, v in cog_sig.items()},
+        "computed_at":      datetime.utcnow().isoformat(),
+    }
+
+
+@app.post("/api/session-risk")
+def session_risk_endpoint(req: SessionPlannerRequest):
+    """Compute Session Risk Score (SRS) via the Session Risk Matrix."""
+    if req.athlete_id not in ATHLETE_PROFILES:
+        raise HTTPException(status_code=404, detail="Athlete not found.")
+
+    # If no CRI override, generate from mock data
+    if req.athlete_cri is None:
+        data = generate_athlete_mock_data(req.athlete_id)
+        hrv = np.array(data["hrv_series"])
+        rt  = np.array(data["rt_series"])
+        dt  = np.array(data["dual_task_series"])
+        ar  = np.array(data["arousal_series"])
+        cri_series = compute_cri_vector(hrv, rt, dt, ar)
+        athlete_cri = float(cri_series[-1])
+    else:
+        athlete_cri = float(req.athlete_cri)
+
+    result = compute_session_risk_score(
+        intensity=req.intensity,
+        duration=req.duration_minutes,
+        complexity=req.tactical_complexity,
+        recovery_hours=req.recovery_hours,
+        session_type=req.session_type,
+        athlete_cri=athlete_cri,
+    )
+
+    return {
+        "athlete_id":     req.athlete_id,
+        "athlete_name":   ATHLETE_PROFILES[req.athlete_id]["name"],
+        "athlete_cri":    round(athlete_cri, 1),
+        "session_type":   req.session_type,
+        **result,
+        "computed_at":    datetime.utcnow().isoformat(),
+    }
+
+
+@app.get("/api/squad-snapshot")
+def squad_snapshot():
+    """Full squad CRI snapshot — for dashboard initialisation."""
+    snapshot = []
+    for aid, profile in ATHLETE_PROFILES.items():
+        data = generate_athlete_mock_data(aid, days=7)
+        hrv = np.array(data["hrv_series"])
+        rt  = np.array(data["rt_series"])
+        dt  = np.array(data["dual_task_series"])
+        ar  = np.array(data["arousal_series"])
+        cri = compute_cri_vector(hrv, rt, dt, ar, window=5)
+        cri_now = float(cri[-1])
+        state = "green" if cri_now >= 80 else "amber" if cri_now >= 50 else "red"
+        snapshot.append({
+            "athlete_id":   aid,
+            "name":         profile["name"],
+            "position":     profile["pos"],
+            "current_cri":  round(cri_now, 1),
+            "current_hrv":  data["hrv_series"][-1],
+            "current_rt":   data["rt_series"][-1],
+            "state":        state,
+        })
+    avg_cri = round(np.mean([s["current_cri"] for s in snapshot]), 1)
+    critical = sum(1 for s in snapshot if s["state"] == "red")
+    return {
+        "squad_size":   len(snapshot),
+        "average_cri":  avg_cri,
+        "critical_count": critical,
+        "snapshot":     snapshot,
+        "timestamp":    datetime.utcnow().isoformat(),
+    }
+</script>
+
+</body>
+</html>
