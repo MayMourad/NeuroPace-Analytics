@@ -1,0 +1,4 @@
+# Tested on 14 October 2026 with Python 3.14, fastapi 0.143.0, uvicorn 0.54.0, numpy 2.5.4
+fastapi
+uvicorn
+numpy

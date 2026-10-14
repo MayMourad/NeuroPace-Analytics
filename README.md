@@ -12,10 +12,10 @@ Built by May Ahmed Mourad (sole developer) for the UniHawk × EU Business School
 
 ## What's in this repository
 
-Everything is in one file, [`index.html`](index.html):
+- [`index.html`](index.html): the **dashboard** (HTML, CSS and JavaScript). It runs standalone in any browser.
+- [`backend/app.py`](backend/app.py): the **FastAPI back end**, with [`backend/requirements.txt`](backend/requirements.txt).
 
-- **Dashboard (front end):** HTML, CSS and JavaScript that run standalone in any browser.
-- **Back end (`app.py`):** a FastAPI service embedded at the bottom of the file inside `<script type="text/python-backend" id="appPyReference">`, so the full source is visible on GitHub.
+The back end was originally submitted embedded at the bottom of `index.html` (inside `<script type="text/python-backend" id="appPyReference">`). That copy is unchanged; `backend/app.py` is an exact copy of it, so it can be run and read directly.
 
 ## The analytics engine
 
@@ -43,17 +43,17 @@ The weights are fixed, documented assumptions in the code. They haven't been val
 
 ## Run the back end
 
-1. Copy the contents of the `appPyReference` script block at the bottom of `index.html` into a file named `app.py`.
-2. Install and start it:
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8000
+```
 
-   ```bash
-   pip install fastapi uvicorn numpy
-   uvicorn app:app --reload --port 8000
-   ```
+Then open http://localhost:8000/docs for FastAPI's interactive API docs.
 
-3. Open http://localhost:8000/docs for FastAPI's interactive API docs.
+All six endpoints were run successfully against the current FastAPI, Uvicorn and NumPy releases on 14 October 2026.
 
-**Planned improvement:** move the back end into its own `backend/app.py` with a `requirements.txt`, unchanged, and connect the dashboard to it.
+**Next step:** connect the dashboard to the API.
 
 ## Stack
 
